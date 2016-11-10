@@ -1,6 +1,11 @@
 import random
 
 
+contraDiagonalInicio = [(0,3),(0,4),(0,5),(1,5),(2,5),(3,5)]#desde donde inicia de abajito. column, row
+contraDiagonalFin = [(3,0),(4,0),(5,0),(6,0),(6,1),(6,2)]
+diagonalInicio = [(3,5),(4,5),(5,5),(6,5),(6,4),(6,3)]
+diagonalFin = [(0,2),(0,1),(0,0),(1,0),(2,0),(3,0)]
+
 class FourInLine:
     def __init__(self, playerR, playerY):
         self.board = [[' ',' ',' ',' ',' ',' '],
@@ -56,7 +61,7 @@ class FourInLine:
         # Check by columns
         if row >= 3:
           if self.board[column][row] == self.board[column][row-1] == self.board[column][row-2] == self.board[column][row-3]:
-            print "Gano el jugador", char, "por columna", column
+            print "Gano el jugador", char, "por columna", column+1
             return True
         # Check by rows
         counter = 0
@@ -64,10 +69,42 @@ class FourInLine:
             if self.board[col][row] == char:
               counter += 1
               if counter == 4:
-                  print "Gano el jugador", char, "por fila", column
+                  print "Gano el jugador", char, "por fila", row+1
                   return True
             else:
               counter = 0
+        counter = 0
+        if row + column > 3 and row + column < 8:
+            c = contraDiagonalInicio[row + column - 3][0]
+            r = contraDiagonalInicio[row + column - 3][1]
+            ctope = contraDiagonalFin[row + column - 3][0]
+            rtope = contraDiagonalFin[row + column - 3][1]
+            while c <= ctope and r >= rtope: #estas dos deberian dejar de cumplirse al mismo tiempo
+                if self.board[c][r] == char:
+                  counter += 1
+                  if counter == 4:
+                      print "Gano el jugador", char, "por contra diagonal", column + 1
+                      return True
+                else:
+                  counter = 0
+                r -= 1
+                c += 1
+        ounter = 0
+        if row - column > -3 and row - column < 4:
+            c = diagonalInicio[row - column + 2][0]
+            r = diagonalInicio[row - column + 2][1]
+            ctope = diagonalFin[row - column + 2][0]
+            rtope = diagonalFin[row - column + 2][1]
+            while c >= ctope and r >= rtope: #estas dos deberian dejar de cumplirse al mismo tiempo
+                if self.board[c][r] == char:
+                  counter += 1
+                  if counter == 4:
+                      print "Gano el jugador", char, "por diagonal", column + 1
+                      return True
+                else:
+                  counter = 0
+                r -= 1
+                c -= 1
         # TODO: Check by diagonals
 
         return False
@@ -166,10 +203,10 @@ class QLearningPlayer(Player):
             self.last_move = random.choice(actions)
             return self.last_move
         
-        print 'last board', self.last_board
-        print 'actions', actions
+        #print 'last board', self.last_board
+        #print 'actions', actions
         qs = [self.getQ(self.last_board, a) for a in actions]
-        print 'qs', qs
+        #print 'qs', qs
         maxQ = max(qs)
 
         if qs.count(maxQ) > 1:
@@ -192,10 +229,10 @@ class QLearningPlayer(Player):
         maxqnew = max([self.getQ(result_state, a) for a in self.available_moves(state)])
         self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev)
 
-player1 = QLearningPlayer()
-player2 = QLearningPlayer()
+player1 = RandomPlayer()
+player2 = RandomPlayer()
 
-for i in xrange(0,1):
+for i in xrange(0,10):
     juego = FourInLine(player1, player2)
     juego.play_game()
 
