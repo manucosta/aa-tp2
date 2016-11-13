@@ -121,8 +121,8 @@ class FourInLine:
         for i in range(len(board[1])):  # Make it work with non square matrices.
               print i+1,
         print
-        for i, element in enumerate(board):
-              print i+1, ' '.join(element)
+        for i in xrange(len(board), 0, -1):
+              print i, ' '.join(board[i-1])
 
 
 class Player(object):
