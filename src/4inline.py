@@ -236,14 +236,15 @@ class QLearningPlayer(Player):
 
     def learn(self, state, lastDiscs, action, reward, result_state):
         prev = self.getQ(state, action)
-        qs = [self.getQ(result_state, a) for a in self.available_moves(lastDiscs)]
-        if len(qs) == 0:
-            maxqnew = 0
-        else: 
-            maxqnew = max(qs)
+        other_player_actions = [a for a in self.available_moves(lastDiscs)]
+        if len(other_player_actions) == 0:
+            randqnew = 0.0
+        else:
+            other_player_action = random.choice(other_player_actions)
+            randqnew = self.getQ(result_state, other_player_action)
         for i, ((s, a), _) in enumerate(self.q):
             if (s,a) == (state, action):
-                q_new = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev)
+                q_new = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
                 self.q[i] = ((s,a),q_new) 
 
 playerR = QLearningPlayer()
@@ -252,7 +253,7 @@ rwins = 0.0
 ywins = 0.0
 ties = 0.0
 
-for i in xrange(0,1000):
+for i in xrange(0,10000):
     print "Epoch: ", i
     juego = FourInLine(playerR, playerY)
     juego.play_game()
