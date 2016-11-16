@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 
 contraDiagonalInicio = [(0,3),(0,4),(0,5),(1,5),(2,5),(3,5)]#desde donde inicia de abajito. column, row
@@ -61,7 +62,7 @@ class FourInLine:
                 break
             # Tie game?
             if self.board_full():
-                print "Empate"
+                #print "Empate"
                 player.reward(0.5, self.board, self.last, self.reverse_board)
                 other_player.reward(0.5, self.board, self.last, self.reverse_board)
                 self.winner = "Tie"
@@ -75,7 +76,7 @@ class FourInLine:
         # Check by columns
         if row >= 3:
           if self.board[column][row] == self.board[column][row-1] == self.board[column][row-2] == self.board[column][row-3]:
-            print "Gano el jugador", char, "por columna", column+1
+            #print "Gano el jugador", char, "por columna", column+1
             return True
         # Check by rows
         counter = 0
@@ -83,7 +84,7 @@ class FourInLine:
             if self.board[col][row] == char:
               counter += 1
               if counter == 4:
-                  print "Gano el jugador", char, "por fila", row+1
+                  #print "Gano el jugador", char, "por fila", row+1
                   return True
             else:
               counter = 0
@@ -97,7 +98,7 @@ class FourInLine:
                 if self.board[c][r] == char:
                   counter += 1
                   if counter == 4:
-                      print "Gano el jugador", char, "por contra diagonal", column + 1
+                      #print "Gano el jugador", char, "por contra diagonal", column + 1
                       return True
                 else:
                   counter = 0
@@ -113,7 +114,7 @@ class FourInLine:
                 if self.board[c][r] == char:
                   counter += 1
                   if counter == 4:
-                      print "Gano el jugador", char, "por diagonal", column + 1
+                      #print "Gano el jugador", char, "por diagonal", column + 1
                       return True
                 else:
                   counter = 0
@@ -173,13 +174,14 @@ class RandomPlayer(Player):
 
 
 class QLearningPlayer(Player):
-    def __init__(self, epsilon=0.2, alpha=0.3, gamma=0.9):
+    def __init__(self, epsilon=0.2, alpha=0.3, gamma=0.9, tau = 0.5):
         self.breed = "Qlearner"
         self.harm_humans = False
         self.q = {} # (state, action) keys: Q values
         self.epsilon = epsilon # e-greedy chance of random exploration
         self.alpha = alpha # learning rate
         self.gamma = gamma # discount factor for future rewards
+        self.tau = tau # temperature
 
     def start_game(self, char):
         self.last_board = [[' ',' ',' ',' ',' ',' '],
@@ -200,34 +202,27 @@ class QLearningPlayer(Player):
         
         return self.q[(state,action)]
             
-        #if self.q.get((state, action)) is None:
-        #    self.q[(state, action)] = 1.0
-        #return self.q.get((state, action))
 
     def move(self, last, board):
-        # aux = board
-        # for t in xrange(0,len(aux)):
-        #  aux[t] = tuple(aux[t])
         self.last_board = mutable2inmutable(board)
         actions = self.available_moves(last)
 
-        if random.random() < self.epsilon: # explore!
-            self.last_move = random.choice(actions)
-            return self.last_move
+        ### Epsilon greedy
+        #if random.random() < self.epsilon: # explore!
+        #    self.last_move = random.choice(actions)
+        #    return self.last_move
         
-        #print 'last board', self.last_board
-        #print 'actions', actions
         qs = [self.getQ(self.last_board, a) for a in actions]
-        #print 'qs', qs
-        #TODO: implementar softmax como alternativa a max
-        maxQ = max(qs)
+        ### Softmax
+        softqs = softmax(qs, self.tau)
+        softmaxQ = max(softqs)
 
-        if qs.count(maxQ) > 1:
+        if softqs.count(softmaxQ) > 1:
             # more than 1 best option; choose among them randomly
-            best_options = [i for i in range(len(actions)) if qs[i] == maxQ]
+            best_options = [i for i in range(len(actions)) if softqs[i] == softmaxQ]
             i = random.choice(best_options)
         else:
-            i = qs.index(maxQ)
+            i = softqs.index(softmaxQ)
 
         self.last_move = actions[i]
 
@@ -239,20 +234,29 @@ class QLearningPlayer(Player):
 
     def learn(self, state, lastDiscs, action, reward, result_state, reverse_state):
         prev = self.getQ(state, action)
-        qs = [self.getQ(reverse_state, a) for a in self.available_moves(state)]
-        if len(qs) == 0:
-            maxqnew = 0
-        else:
-            maxqnew = max(qs)
-        # other_player_actions = [a for a in self.available_moves(lastDiscs)]
-        # if len(other_player_actions) == 0:
-        #     randqnew = 0.0
+        # qs = [self.getQ(reverse_state, a) for a in self.available_moves(state)]
+        # if len(qs) == 0:
+        #     maxqnew = 0
         # else:
-        #     other_player_action = random.choice(other_player_actions)
-        #     randqnew = self.getQ(result_state, other_player_action)
-        #q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
-        self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev) 
+        #     maxqnew = max(qs)
+        other_player_actions = [a for a in self.available_moves(lastDiscs)]
+        if len(other_player_actions) == 0:
+            randqnew = 0.0
+        else:
+            result_state = mutable2inmutable(result_state)
+            other_player_action = random.choice(other_player_actions)
+            randqnew = self.getQ(result_state, other_player_action)
+        self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
+        #self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev) 
 
+def softmax(qs, tau):
+    distr = []
+    expos = [np.exp(q/tau) for q in qs]
+    suma = sum(expos)
+    for e in expos:
+        distr.append(e / suma)
+    return distr
+        
 def mutable2inmutable(board):
     aux = []
     for l in board:
@@ -273,16 +277,6 @@ rwins = 0.0
 ywins = 0.0
 ties = 0.0
 
-tupla = mutable2inmutable([[' Y ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' R ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' ']])
-print tupla
-lista = inmutable2mutable(tupla)
-print lista
 
 # for i in xrange(0,1000000):
 #     print "Epoch: ", i
@@ -303,3 +297,31 @@ print lista
 #     r_rate = rwins / (rwins + ywins + ties)
 #     print "Red's rate of wins: ", r_rate
 #     #juego.display_board()
+
+experimento = open('Experimentos', 'w')
+
+
+for g in [0.1, 0.3,0.4,0.6,0.8,0.9, 1.0]:
+    for a in [0.01, 0.1,0.3, 1.0]:
+        for t in [0.1,0.2,0.3, 0.4, 0.5]:
+            print "Experimentando con " + "Alpha: "+str(a)+" Tau: "+str(t)+ " Gamma: "+str(g)
+            experimento.write("Alpha: "+str(a)+" Tau: "+str(t)+ " Gamma: "+str(g))
+            for i in xrange(1000):
+                playerR = QLearningPlayer(alpha=a,gamma=g, tau=t)
+                playerY = QLearningPlayer(alpha=a,gamma=g, tau=t)
+
+                juego = FourInLine(playerR, playerY)
+                juego.play_game()
+                #print playerR.q.values()
+
+                if juego.winner == 'R':
+                    rwins += 1
+                elif juego.winner == 'Y':
+                    ywins += 1
+                else:
+                    ties += 1
+                r_rate = rwins / (rwins + ywins + ties)
+            experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
+            rwins = 0.0
+            ywins = 0.0
+            ties = 0.0
