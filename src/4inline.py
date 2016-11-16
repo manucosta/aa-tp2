@@ -15,6 +15,13 @@ class FourInLine:
                       [' ',' ',' ',' ',' ',' '],
                       [' ',' ',' ',' ',' ',' '],
                       [' ',' ',' ',' ',' ',' ']]
+        self.reverse_board = [[' ',' ',' ',' ',' ',' '],
+                              [' ',' ',' ',' ',' ',' '],
+                              [' ',' ',' ',' ',' ',' '],
+                              [' ',' ',' ',' ',' ',' '],
+                              [' ',' ',' ',' ',' ',' '],
+                              [' ',' ',' ',' ',' ',' '],
+                              [' ',' ',' ',' ',' ',' ']]
         self.last = [0] * 7
         self.playerR, self.playerY = playerR, playerY
         self.playerR_turn = random.choice([True, False])
@@ -37,25 +44,29 @@ class FourInLine:
             # Check if the selected action is ilegal
             if self.last[sel_column] >= 6:
                 print "Accion ilegal!"
-                player.reward(-99, self.board, self.last) # score of shame
+                player.reward(-99, self.board, self.last, self.reverse_board) # score of shame
                 break
             # Is not ilegal, so lets update
             self.board[sel_column][self.last[sel_column]] = char
+            if char == 'R':
+                self.reverse_board[sel_column][self.last[sel_column]] = 'Y'
+            else:
+                self.reverse_board[sel_column][self.last[sel_column]] = 'R'
             self.last[sel_column] += 1
             # Check if the actual player wins
             if self.player_wins(char, sel_column):
-                player.reward(1, self.board,self.last)
-                other_player.reward(-1, self.board, self.last)
+                player.reward(1, self.board,self.last, self.reverse_board)
+                other_player.reward(-1, self.board, self.last, self.reverse_board)
                 self.winner = char
                 break
             # Tie game?
             if self.board_full():
                 print "Empate"
-                player.reward(0.5, self.board, self.last)
-                other_player.reward(0.5, self.board, self.last)
+                player.reward(0.5, self.board, self.last, self.reverse_board)
+                other_player.reward(0.5, self.board, self.last, self.reverse_board)
                 self.winner = "Tie"
                 break
-            other_player.reward(0, self.board, self.last)
+            other_player.reward(0, self.board, self.last, self.reverse_board)
             # Swicht of turn
             self.playerR_turn = not self.playerR_turn
 
@@ -138,7 +149,7 @@ class Player(object):
     def move(self, last, board):
         return int(raw_input("Your move? "))
 
-    def reward(self, value, board, lastDiscs):
+    def reward(self, value, board, lastDiscs, reverse_state):
         pass
         #print "{} rewarded: {}".format(self.breed, value)
 
@@ -165,8 +176,7 @@ class QLearningPlayer(Player):
     def __init__(self, epsilon=0.2, alpha=0.3, gamma=0.9):
         self.breed = "Qlearner"
         self.harm_humans = False
-        # self.q = {} # (state, action) keys: Q values
-        self.q = [] # [((state, action), Q_values)]
+        self.q = {} # (state, action) keys: Q values
         self.epsilon = epsilon # e-greedy chance of random exploration
         self.alpha = alpha # learning rate
         self.gamma = gamma # discount factor for future rewards
@@ -230,21 +240,27 @@ class QLearningPlayer(Player):
 
         return actions[i]
 
-    def reward(self, value, board, lastDiscs):
+    def reward(self, value, board, lastDiscs, reverse_state):
         if self.last_move:
-            self.learn(self.last_board, lastDiscs, self.last_move, value, board)
+            self.learn(self.last_board, lastDiscs, self.last_move, value, board, reverse_state)
 
-    def learn(self, state, lastDiscs, action, reward, result_state):
+    def learn(self, state, lastDiscs, action, reward, result_state, reverse_state):
         prev = self.getQ(state, action)
-        other_player_actions = [a for a in self.available_moves(lastDiscs)]
-        if len(other_player_actions) == 0:
-            randqnew = 0.0
+        qs = [self.getQ(reverse_state, a) for a in self.available_moves(state)]
+        if len(qs) == 0:
+            maxqnew = 0
         else:
-            other_player_action = random.choice(other_player_actions)
-            randqnew = self.getQ(result_state, other_player_action)
+            maxqnew = max(qs)
+        # other_player_actions = [a for a in self.available_moves(lastDiscs)]
+        # if len(other_player_actions) == 0:
+        #     randqnew = 0.0
+        # else:
+        #     other_player_action = random.choice(other_player_actions)
+        #     randqnew = self.getQ(result_state, other_player_action)
         for i, ((s, a), _) in enumerate(self.q):
             if (s,a) == (state, action):
-                q_new = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
+                #q_new = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
+                q_new = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev)
                 self.q[i] = ((s,a),q_new) 
 
 playerR = QLearningPlayer()
@@ -253,7 +269,7 @@ rwins = 0.0
 ywins = 0.0
 ties = 0.0
 
-for i in xrange(0,10000):
+for i in xrange(0,1000):
     print "Epoch: ", i
     juego = FourInLine(playerR, playerY)
     juego.play_game()
