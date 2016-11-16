@@ -194,18 +194,11 @@ class QLearningPlayer(Player):
     def getQ(self, state, action):
         # encourage exploration; "optimistic" 1.0 initial values
         # TODO: Probar "pesimista": 0.0 initial values.
-        return_val = None
-        
-        q_aux = [(s, a) for ((s, a), _) in self.q]
-        if not (state, action) in q_aux:
-            self.q.append(((state, action), 1.0))
-        
-        for ((s, a), q_val) in self.q:
-            if (s, a) == (state, action):
-                return_val = q_val
-                break
 
-        return return_val
+        if not self.q.has_key((state, action)):
+            self.q[(state, action)] = 1.0
+        
+        return self.q[(state,action)]
             
         #if self.q.get((state, action)) is None:
         #    self.q[(state, action)] = 1.0
@@ -215,7 +208,7 @@ class QLearningPlayer(Player):
         # aux = board
         # for t in xrange(0,len(aux)):
         #  aux[t] = tuple(aux[t])
-        self.last_board = board
+        self.last_board = mutable2inmutable(board)
         actions = self.available_moves(last)
 
         if random.random() < self.epsilon: # explore!
@@ -257,11 +250,22 @@ class QLearningPlayer(Player):
         # else:
         #     other_player_action = random.choice(other_player_actions)
         #     randqnew = self.getQ(result_state, other_player_action)
-        for i, ((s, a), _) in enumerate(self.q):
-            if (s,a) == (state, action):
-                #q_new = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
-                q_new = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev)
-                self.q[i] = ((s,a),q_new) 
+        #q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
+        self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev) 
+
+def mutable2inmutable(board):
+    aux = []
+    for l in board:
+        l_aux = tuple(l)
+        aux.append(l_aux)
+    return tuple(aux)
+
+def inmutable2mutable(board):
+    aux = []
+    for l in board:
+        l_aux = list(l)
+        aux.append(l_aux)
+    return aux
 
 playerR = QLearningPlayer()
 playerY = RandomPlayer()
@@ -269,22 +273,33 @@ rwins = 0.0
 ywins = 0.0
 ties = 0.0
 
-for i in xrange(0,1000):
-    print "Epoch: ", i
-    juego = FourInLine(playerR, playerY)
-    juego.play_game()
+tupla = mutable2inmutable([[' Y ',' ',' ',' ',' ',' '],
+                          [' ',' ',' ',' ',' ',' '],
+                          [' R ',' ',' ',' ',' ',' '],
+                          [' ',' ',' ',' ',' ',' '],
+                          [' ',' ',' ',' ',' ',' '],
+                          [' ',' ',' ',' ',' ',' '],
+                          [' ',' ',' ',' ',' ',' ']])
+print tupla
+lista = inmutable2mutable(tupla)
+print lista
 
-    if juego.winner == 'R':
-        rwins += 1
-    elif juego.winner == 'Y':
-        ywins += 1
-    else:
-        ties += 1
+# for i in xrange(0,1000000):
+#     print "Epoch: ", i
+#     juego = FourInLine(playerR, playerY)
+#     juego.play_game()
 
-    print rwins
-    print ywins
-    print ties
+#     if juego.winner == 'R':
+#         rwins += 1
+#     elif juego.winner == 'Y':
+#         ywins += 1
+#     else:
+#         ties += 1
 
-    r_rate = rwins / (rwins + ywins + ties)
-    print "Red's rate of wins: ", r_rate
-    #juego.display_board()
+#     print rwins
+#     print ywins
+#     print ties
+
+#     r_rate = rwins / (rwins + ywins + ties)
+#     print "Red's rate of wins: ", r_rate
+#     #juego.display_board()
