@@ -1,5 +1,8 @@
 import random
 import numpy as np
+from joblib import Parallel, delayed
+import multiprocessing
+
 
 
 contraDiagonalInicio = [(0,3),(0,4),(0,5),(1,5),(2,5),(3,5)]#desde donde inicia de abajito. column, row
@@ -25,7 +28,7 @@ class FourInLine:
                               [' ',' ',' ',' ',' ',' ']]
         self.last = [0] * 7
         self.playerR, self.playerY = playerR, playerY
-        self.playerR_turn = random.choice([True, False])
+        self.playerR_turn = np.random.choice([True, False])
         self.winner = ' '
 
     def play_game(self):
@@ -170,7 +173,7 @@ class RandomPlayer(Player):
         pass
 
     def move(self, last, board):
-        return random.choice(self.available_moves(last))
+        return np.random.choice(self.available_moves(last))
 
 
 class QLearningPlayer(Player):
@@ -209,24 +212,25 @@ class QLearningPlayer(Player):
 
         ### Epsilon greedy
         #if random.random() < self.epsilon: # explore!
-        #    self.last_move = random.choice(actions)
+        #    self.last_move = np.random.choice(actions)
         #    return self.last_move
         
         qs = [self.getQ(self.last_board, a) for a in actions]
         ### Softmax
         softqs = softmax(qs, self.tau)
-        softmaxQ = max(softqs)
+        action = np.random.choice(actions, p=softqs)
+        
+        # maxQ = max(qs)
+        # if qs.count(maxQ) > 1:
+        #     # more than 1 best option; choose among them randomly
+        #     best_options = [i for i in range(len(actions)) if qs[i] == maxQ]
+        #     i = np.random.choice(best_options)
+        # else:
+        #     i = qs.index(maxQ)
 
-        if softqs.count(softmaxQ) > 1:
-            # more than 1 best option; choose among them randomly
-            best_options = [i for i in range(len(actions)) if softqs[i] == softmaxQ]
-            i = random.choice(best_options)
-        else:
-            i = softqs.index(softmaxQ)
+        self.last_move = action
 
-        self.last_move = actions[i]
-
-        return actions[i]
+        return action
 
     def reward(self, value, board, lastDiscs, reverse_state):
         if self.last_move:
@@ -244,7 +248,7 @@ class QLearningPlayer(Player):
             randqnew = 0.0
         else:
             result_state = mutable2inmutable(result_state)
-            other_player_action = random.choice(other_player_actions)
+            other_player_action = np.random.choice(other_player_actions)
             randqnew = self.getQ(result_state, other_player_action)
         self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
         #self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev) 
@@ -271,12 +275,11 @@ def inmutable2mutable(board):
         aux.append(l_aux)
     return aux
 
-playerR = QLearningPlayer()
-playerY = RandomPlayer()
-rwins = 0.0
-ywins = 0.0
-ties = 0.0
-
+# playerR = QLearningPlayer()
+# playerY = RandomPlayer()
+# rwins = 0.0
+# ywins = 0.0
+# ties = 0.0
 
 # for i in xrange(0,1000000):
 #     print "Epoch: ", i
@@ -299,17 +302,21 @@ ties = 0.0
 #     #juego.display_board()
 
 experimento = open('Experimentos', 'w')
+experimento.close()
 
+rwins = 0.0
+ywins = 0.0
+ties = 0.0
 
-for g in [0.1, 0.3,0.4,0.6,0.8,0.9, 1.0]:
+for g in [0.1, 0.3,0.4,0.6,0.8,0.9, 0.95]:
     for a in [0.01, 0.1,0.3, 1.0]:
         for t in [0.1,0.2,0.3, 0.4, 0.5]:
             print "Experimentando con " + "Alpha: "+str(a)+" Tau: "+str(t)+ " Gamma: "+str(g)
+            experimento = open('Experimentos', 'a')
             experimento.write("Alpha: "+str(a)+" Tau: "+str(t)+ " Gamma: "+str(g))
-            for i in xrange(1000):
-                playerR = QLearningPlayer(alpha=a,gamma=g, tau=t)
-                playerY = QLearningPlayer(alpha=a,gamma=g, tau=t)
-
+            playerR = QLearningPlayer(alpha=a,gamma=g, tau=t)
+            playerY = RandomPlayer()
+            for i in xrange(30000):
                 juego = FourInLine(playerR, playerY)
                 juego.play_game()
                 #print playerR.q.values()
@@ -320,8 +327,9 @@ for g in [0.1, 0.3,0.4,0.6,0.8,0.9, 1.0]:
                     ywins += 1
                 else:
                     ties += 1
-                r_rate = rwins / (rwins + ywins + ties)
+            r_rate = rwins / (rwins + ywins + ties)
             experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
+            experimento.close()
             rwins = 0.0
             ywins = 0.0
             ties = 0.0
