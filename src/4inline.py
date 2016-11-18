@@ -1,7 +1,11 @@
+from __future__ import division
+
 import random
 import numpy as np
-from joblib import Parallel, delayed
+#from joblib import Parallel, delayed
 import multiprocessing
+import math
+import matplotlib.pyplot as plt
 
 
 
@@ -301,35 +305,85 @@ def inmutable2mutable(board):
 #     print "Red's rate of wins: ", r_rate
 #     #juego.display_board()
 
+
 experimento = open('Experimentos', 'w')
-experimento.close()
+iteraciones = 100000
 
-rwins = 0.0
-ywins = 0.0
-ties = 0.0
-
-for g in [0.1, 0.3,0.4,0.6,0.8,0.9, 0.95]:
-    for a in [0.01, 0.1,0.3, 1.0]:
-        for t in [0.1,0.2,0.3, 0.4, 0.5]:
-            print "Experimentando con " + "Alpha: "+str(a)+" Tau: "+str(t)+ " Gamma: "+str(g)
-            experimento = open('Experimentos', 'a')
-            experimento.write("Alpha: "+str(a)+" Tau: "+str(t)+ " Gamma: "+str(g))
-            playerR = QLearningPlayer(alpha=a,gamma=g, tau=t)
-            playerY = RandomPlayer()
-            for i in xrange(30000):
-                juego = FourInLine(playerR, playerY)
-                juego.play_game()
-                #print playerR.q.values()
-
-                if juego.winner == 'R':
-                    rwins += 1
-                elif juego.winner == 'Y':
-                    ywins += 1
-                else:
-                    ties += 1
-            r_rate = rwins / (rwins + ywins + ties)
-            experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
-            experimento.close()
+for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
+    for a in [0.01, 0.1, 0.3, 1.0]:
+        for t in [0.1 , 0.2, 0.3, 0.4, 0.5]:
+            print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
+            experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
+            # Initialize
             rwins = 0.0
             ywins = 0.0
-            ties = 0.0
+            ties  = 0.0
+            playerR = QLearningPlayer(alpha=a, gamma=g, tau=t)
+            playerY = RandomPlayer()
+            
+            # Lets play
+            results = []
+            for i in xrange(iteraciones):
+                juego = FourInLine(playerR, playerY)
+                juego.play_game()
+                if juego.winner == 'R':
+                    rwins += 1
+                    results.append('R')
+                elif juego.winner == 'Y':
+                    ywins += 1
+                    results.append('Y')
+                else:
+                    ties += 1
+                    results.append('T')
+            
+            # Original perfomance measurement
+            r_rate = rwins/(rwins + ywins + ties)
+            experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
+            
+            # Taking into account only the last 10% matches
+            lasts = [results[x] for x in range(int(iteraciones-iteraciones/10), iteraciones)]
+            lasts_rwins = len([x for x in lasts if x == 'R'])
+            lasts_r_rate = lasts_rwins/(iteraciones/10)
+            experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")
+            
+            # Weighted sum with linear (exponential) growth
+            factor = 0.5
+            sum_r_rate = 0
+            for result_index in range(len(results)):
+                if results[result_index] == 'R':
+                    sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
+            experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
+            
+            '''
+            # Plot
+            x = np.arange(0, iteraciones, 1)
+            plt.plot(x, f1, color = 'r', label='Player R')
+            plt.plot(x, f2, color = 'b', label='Player Y')
+                     
+            axes = plt.gca()
+            axes.set_xlim([0, iteraciones])    # x-axis bounds
+            axes.set_ylim([0, 1])              # y-axis bounds
+            
+            plt.title('Rate of wins', fontdict=titlefont)
+            plt.xlabel('Match number', fontdict=labelfont)
+            plt.ylabel('Rate of wins', fontdict=labelfont)
+
+            plt.show()
+            '''
+
+experimento.close()
+
+
+# Con 100.000 iteraciones y escogiendo acciones aleatoriamente:
+
+    # Random VS Random (Baseline)
+        # Red's rate of wins: 0.49626
+        # Red's rate of wins taking into account only the last 10% matches: 0.4976
+        # Red's rate of wins with a weighted sum with linear growth: 2.483.985.245
+
+    # Random VS QLearning (Alpha: 0.3 Tau: 0.5 Gamma: 0.9)
+        # Red's rate of wins: 0.49928
+        # Red's rate of wins taking into account only the last 10% matches: 0.4963
+        # Red's rate of wins with a weighted sum with linear growth: 2.505.317.718
+
+
