@@ -7,7 +7,8 @@ import multiprocessing
 import math
 import matplotlib.pyplot as plt
 
-
+import hashlib
+import cPickle as pickle
 
 contraDiagonalInicio = [(0,3),(0,4),(0,5),(1,5),(2,5),(3,5)]#desde donde inicia de abajito. column, row
 contraDiagonalFin = [(3,0),(4,0),(5,0),(6,0),(6,1),(6,2)]
@@ -63,18 +64,18 @@ class FourInLine:
             self.last[sel_column] += 1
             # Check if the actual player wins
             if self.player_wins(char, sel_column):
-                player.reward(1, self.board,self.last, self.reverse_board)
-                other_player.reward(-1, self.board, self.last, self.reverse_board)
+                player.reward(20.0, self.board,self.last, self.reverse_board)
+                other_player.reward(-20.0, self.board, self.last, self.reverse_board)
                 self.winner = char
                 break
             # Tie game?
             if self.board_full():
                 #print "Empate"
-                player.reward(0.5, self.board, self.last, self.reverse_board)
-                other_player.reward(0.5, self.board, self.last, self.reverse_board)
+                player.reward(4.0, self.board, self.last, self.reverse_board)
+                other_player.reward(4.0, self.board, self.last, self.reverse_board)
                 self.winner = "Tie"
                 break
-            other_player.reward(0, self.board, self.last, self.reverse_board)
+            # other_player.reward(0, self.board, self.last, self.reverse_board)
             # Swicht of turn
             self.playerR_turn = not self.playerR_turn
 
@@ -191,13 +192,13 @@ class QLearningPlayer(Player):
         self.tau = tau # temperature
 
     def start_game(self, char):
-        self.last_board = [[' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' '],
-                          [' ',' ',' ',' ',' ',' ']]
+        self.last_board = ((' ',' ',' ',' ',' ',' '),
+                          (' ',' ',' ',' ',' ',' '),
+                          (' ',' ',' ',' ',' ',' '),
+                          (' ',' ',' ',' ',' ',' '),
+                          (' ',' ',' ',' ',' ',' '),
+                          (' ',' ',' ',' ',' ',' '),
+                          (' ',' ',' ',' ',' ',' '))
         self.last_move = None
 
     def getQ(self, state, action):
@@ -207,7 +208,7 @@ class QLearningPlayer(Player):
         if not self.q.has_key((state, action)):
             self.q[(state, action)] = 1.0
         
-        return self.q[(state,action)]
+        return self.q[(state, action)]
             
 
     def move(self, last, board):
@@ -242,20 +243,22 @@ class QLearningPlayer(Player):
 
     def learn(self, state, lastDiscs, action, reward, result_state, reverse_state):
         prev = self.getQ(state, action)
-        # qs = [self.getQ(reverse_state, a) for a in self.available_moves(state)]
-        # if len(qs) == 0:
-        #     maxqnew = 0
-        # else:
-        #     maxqnew = max(qs)
-        other_player_actions = [a for a in self.available_moves(lastDiscs)]
-        if len(other_player_actions) == 0:
-            randqnew = 0.0
+        qs = [self.getQ(reverse_state, a) for a in self.available_moves(state)]
+        if len(qs) == 0:
+            otherqnew = 0
         else:
-            result_state = mutable2inmutable(result_state)
-            other_player_action = np.random.choice(other_player_actions)
-            randqnew = self.getQ(result_state, other_player_action)
-        self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
-        #self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev) 
+            softqs = softmax(qs, self.tau)
+            otherqnew = np.random.choice(qs, p=softqs)            
+        # other_player_actions = [a for a in self.available_moves(lastDiscs)]
+        # if len(other_player_actions) == 0:
+        #     randqnew = 0.0
+        # else:
+        #     other_action = np.random.choice(other_player_actions)
+        #     result_state[other_action-1][lastDiscs[other_action-1]] = 'Y'
+        #     result_state = mutable2inmutable(result_state)
+        #     randqnew = self.getQ(result_state, other_action)
+        # self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
+        self.q[(state, action)] = prev + self.alpha * ((reward - self.gamma*otherqnew) - prev) 
 
 def softmax(qs, tau):
     distr = []
@@ -307,13 +310,16 @@ def inmutable2mutable(board):
 
 
 experimento = open('Experimentos', 'w')
+experimento.close()
 iteraciones = 100000
 
 for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
     for a in [0.01, 0.1, 0.3, 1.0]:
         for t in [0.1 , 0.2, 0.3, 0.4, 0.5]:
             print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
+            experimento = open('Experimentos', 'a')
             experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
+            experimento.close()
             # Initialize
             rwins = 0.0
             ywins = 0.0
@@ -324,6 +330,8 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
             # Lets play
             results = []
             for i in xrange(iteraciones):
+                if i%1000 == 0: 
+                    print i, "iteraciones" 
                 juego = FourInLine(playerR, playerY)
                 juego.play_game()
                 if juego.winner == 'R':
@@ -338,6 +346,7 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
             
             # Original perfomance measurement
             r_rate = rwins/(rwins + ywins + ties)
+            experimento = open('Experimentos', 'a')
             experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
             
             # Taking into account only the last 10% matches
@@ -353,7 +362,7 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
                 if results[result_index] == 'R':
                     sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
             experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
-            
+            experimento.close()
             '''
             # Plot
             x = np.arange(0, iteraciones, 1)
@@ -371,8 +380,6 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
             plt.show()
             '''
 
-experimento.close()
-
 
 # Con 100.000 iteraciones y escogiendo acciones aleatoriamente:
 
@@ -385,5 +392,3 @@ experimento.close()
         # Red's rate of wins: 0.49928
         # Red's rate of wins taking into account only the last 10% matches: 0.4963
         # Red's rate of wins with a weighted sum with linear growth: 2.505.317.718
-
-
