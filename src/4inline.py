@@ -21,7 +21,7 @@ class FourInLine:
         self.reverse_board = [ [ ' ' for _ in range(rows)] for _ in range(columns)]
         self.rows = rows
         self.columns = columns
-        self.last = [0] * 7
+        self.last = [0] * columns
         self.playerR, self.playerY = playerR, playerY
         self.winner = ' '
 
@@ -128,8 +128,8 @@ class FourInLine:
 
     def available_moves(self):
         res = []
-        for i in xrange(7):
-            if self.last[i] < 6:
+        for i in xrange(self.columns):
+            if self.last[i] < self.rows:
                 res.append(i)
         return res 
 
