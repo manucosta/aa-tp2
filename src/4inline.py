@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 import hashlib
 import cPickle as pickle
 
+contraDiagonalInicio = [(0,3),(0,4),(0,5),(1,5),(2,5),(3,5)]#desde donde inicia de abajito. column, row
+contraDiagonalFin = [(3,0),(4,0),(5,0),(6,0),(6,1),(6,2)]
+diagonalInicio = [(3,5),(4,5),(5,5),(6,5),(6,4),(6,3)]
+diagonalFin = [(0,2),(0,1),(0,0),(1,0),(2,0),(3,0)]
 
 class FourInLine:
     def __init__(self, playerR, playerY, rows, columns):
@@ -20,16 +24,6 @@ class FourInLine:
         self.last = [0] * columns
         self.playerR, self.playerY = playerR, playerY
         self.winner = ' '
-        self.contraDiagonalInicio = []#desde donde inicia de abajito. column, row
-        self.contraDiagonalFin = []
-        self.diagonalInicio = []
-        self.diagonalFin = []
-        self.inicializarDiagonales(rows, columns)
-        print self.contraDiagonalFin
-        print self.contraDiagonalInicio
-        print self.diagonalInicio 
-        print self.diagonalFin 
-
 
     def play_game(self):
         self.playerR.start_game('R')
@@ -126,34 +120,6 @@ class FourInLine:
                 c -= 1
         return False
 
-    def inicializarDiagonales(self, rows, columns):
-        self.contraDiagonalInicio = []#desde donde inicia de abajito. column, row
-        self.contraDiagonalFin = []
-        self.diagonalInicio = []
-        self.diagonalFin = []
-        if columns > 3 and rows > 3:
-            for r in xrange(3, rows):
-                self.contraDiagonalInicio.append((0,r))
-            for c in xrange(1, columns-3):
-                self.contraDiagonalInicio.append((c,rows-1))
-
-            for c in xrange(3, columns):
-                self.contraDiagonalFin.append((c,0))
-            for r in xrange(1, rows-3):
-                self.contraDiagonalFin.append((6,c))
-
-            for c in xrange(3,columns):
-                self.diagonalInicio.append((c,rows-1))
-            for r in xrange(rows-2, 2,-1):
-                self.diagonalInicio.append((columns-1,r))
-
-            for r in xrange(rows-4, -1,-1):#indices, desgracia de todo programador...
-                self.diagonalFin.append((0,r))
-            for c in xrange(1, columns-3):
-                self.diagonalFin.append((c,0))
-
-
-
     def board_full(self):
         for i in self.last:
             if i < 6:
@@ -206,7 +172,7 @@ class RandomPlayer(Player):
 
 
 class QLearningPlayer(Player):
-    def __init__(self, epsilon=0.2, alpha=0.3, gamma=0.9, tau = 0.25):
+    def __init__(self, epsilon=0.1, alpha=0.3, gamma=0.9, tau = 0.25):
         self.breed = "Qlearner"
         self.harm_humans = False
         self.q = {} # (state, action) keys: Q values
@@ -234,9 +200,9 @@ class QLearningPlayer(Player):
         actions = moves
 
         ### Epsilon greedy
-        #if random.random() < self.epsilon: # explore!
-        #    self.last_move = np.random.choice(actions)
-        #    return self.last_move
+        # if random.random() < self.epsilon: # explore!
+        #     self.last_move = np.random.choice(actions)
+        #     return self.last_move
         
         qs = [self.getQ(self.last_board, a) for a in actions]
         ### Softmax
@@ -304,77 +270,77 @@ def inmutable2mutable(board):
 
 experimento = open('Experimentos', 'w')
 experimento.close()
-iteraciones = 250000
+iteraciones = 100000
 
 for a in [None]:
     for g in [None]:
-        for t in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
-            print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
-            experimento = open('Experimentos', 'a')
-            experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
-            experimento.close()
-            # Initialize
-            rwins = 0.0
-            ywins = 0.0
-            ties  = 0.0
+        for t in [0.05]:
+                print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
+                experimento = open('Experimentos', 'a')
+                experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
+                experimento.close()
+                # Initialize
+                rwins = 0.0
+                ywins = 0.0
+                ties  = 0.0
 
-            playerR = QLearningPlayer(tau=t)
-            playerY = RandomPlayer()
-            
-            # Lets play
-            results = []
-            for i in xrange(1):
-                juego = FourInLine(playerR, playerY, 6, 7)
-                juego.play_game()
-                if juego.winner == 'R':
-                    rwins += 1
-                    results.append('R')
-                elif juego.winner == 'Y':
-                    ywins += 1
-                    results.append('Y')
-                else:
-                    ties += 1
-                    results.append('T')
-                if i%10000 == 0: 
-                    print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
-            
-            # Original perfomance measurement
-            r_rate = rwins/(rwins + ywins + ties)
-            experimento = open('Experimentos', 'a')
-            experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
-            
-            # Taking into account only the last 10% matches
-            lasts = [results[x] for x in range(int(iteraciones-iteraciones/10), iteraciones)]
-            lasts_rwins = len([x for x in lasts if x == 'R'])
-            lasts_r_rate = lasts_rwins/(iteraciones/10)
-            experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")'''
-            
-            # Weighted sum with linear (exponential) growth
-            '''
-            factor = 0.5
-            sum_r_rate = 0
-            for result_index in range(len(results)):
-                if results[result_index] == 'R':
-                    sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
-            experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
-            experimento.close()
-            
-            '''
-            # Plot
-            x = np.arange(0, iteraciones, 1)
-            plt.plot(x, f1, color = 'r', label='Player R')
-            plt.plot(x, f2, color = 'b', label='Player Y')
-                     
-            axes = plt.gca()
-            axes.set_xlim([0, iteraciones])    # x-axis bounds
-            axes.set_ylim([0, 1])              # y-axis bounds
-            
-            plt.title('Rate of wins', fontdict=titlefont)
-            plt.xlabel('Match number', fontdict=labelfont)
-            plt.ylabel('Rate of wins', fontdict=labelfont)
+                playerR = QLearningPlayer(tau=t)
+                playerY = RandomPlayer()
+                
+                # Lets play
+                results = []
+                for i in xrange(iteraciones):
+                    juego = FourInLine(playerR, playerY, 6, 7)
+                    juego.play_game()
+                    if juego.winner == 'R':
+                        rwins += 1
+                        results.append('R')
+                    elif juego.winner == 'Y':
+                        ywins += 1
+                        results.append('Y')
+                    else:
+                        ties += 1
+                        results.append('T')
+                    if i%10000 == 0: 
+                        print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
+                
+                # Original perfomance measurement
+                r_rate = rwins/(rwins + ywins + ties)
+                experimento = open('Experimentos', 'a')
+                experimento.write(" Red's rate of wins: " + str(r_rate) + "\n")
+                
+                # Taking into account only the last 10% matches
+                lasts = [results[x] for x in range(int(iteraciones-iteraciones/10), iteraciones)]
+                lasts_rwins = len([x for x in lasts if x == 'R'])
+                lasts_r_rate = lasts_rwins/(iteraciones/10)
+                experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")
+                
+                # Weighted sum with linear (exponential) growth
+                '''
+                factor = 0.5
+                sum_r_rate = 0
+                for result_index in range(len(results)):
+                    if results[result_index] == 'R':
+                        sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
+                experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
+                experimento.close()
+                '''
+                '''
+                # Plot
+                x = np.arange(0, iteraciones, 1)
+                plt.plot(x, f1, color = 'r', label='Player R')
+                plt.plot(x, f2, color = 'b', label='Player Y')
+                         
+                axes = plt.gca()
+                axes.set_xlim([0, iteraciones])    # x-axis bounds
+                axes.set_ylim([0, 1])              # y-axis bounds
+                
+                plt.title('Rate of wins', fontdict=titlefont)
+                plt.xlabel('Match number', fontdict=labelfont)
+                plt.ylabel('Rate of wins', fontdict=labelfont)
 
-            plt.show()
-            '''
+                plt.show()
+                '''
 
 
 # Con 100.000 iteraciones y escogiendo acciones aleatoriamente:
