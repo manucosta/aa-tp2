@@ -283,7 +283,10 @@ for a in [None]:
                 rwins = 0.0
                 ywins = 0.0
                 ties  = 0.0
-
+                
+                r_rates = []
+                y_rates = []
+                
                 playerR = QLearningPlayer(tau=t)
                 playerY = RandomPlayer()
                 
@@ -303,7 +306,9 @@ for a in [None]:
                         results.append('T')
                     if i%10000 == 0: 
                         print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
-                
+                    r_rates.append((rwins/(rwins + ywins + ties)))
+                    y_rates.append((ywins/(rwins + ywins + ties)))
+        
                 # Original perfomance measurement
                 r_rate = rwins/(rwins + ywins + ties)
                 experimento = open('Experimentos', 'a')
@@ -324,23 +329,25 @@ for a in [None]:
                         sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
                 experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
                 experimento.close()
+                
                 '''
-                '''
+                
                 # Plot
                 x = np.arange(0, iteraciones, 1)
-                plt.plot(x, f1, color = 'r', label='Player R')
-                plt.plot(x, f2, color = 'b', label='Player Y')
-                         
+                plt.plot(x, r_rates, color = 'r', label='Player R')
+                plt.plot(x, y_rates, color = 'b', label='Player Y')
+                
                 axes = plt.gca()
                 axes.set_xlim([0, iteraciones])    # x-axis bounds
                 axes.set_ylim([0, 1])              # y-axis bounds
-                
-                plt.title('Rate of wins', fontdict=titlefont)
-                plt.xlabel('Match number', fontdict=labelfont)
-                plt.ylabel('Rate of wins', fontdict=labelfont)
-
+                    
+                plt.title('Rates')
+                plt.xlabel('Match number')
+                plt.ylabel('Rate of wins')
+                legend = plt.legend(loc='upper right', shadow=True, fontsize='small')
+                    
+                plt.grid()
                 plt.show()
-                '''
 
 
 # Con 100.000 iteraciones y escogiendo acciones aleatoriamente:
