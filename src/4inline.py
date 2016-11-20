@@ -10,10 +10,6 @@ import matplotlib.pyplot as plt
 import hashlib
 import cPickle as pickle
 
-contraDiagonalInicio = [(0,3),(0,4),(0,5),(1,5),(2,5),(3,5)]#desde donde inicia de abajito. column, row
-contraDiagonalFin = [(3,0),(4,0),(5,0),(6,0),(6,1),(6,2)]
-diagonalInicio = [(3,5),(4,5),(5,5),(6,5),(6,4),(6,3)]
-diagonalFin = [(0,2),(0,1),(0,0),(1,0),(2,0),(3,0)]
 
 class FourInLine:
     def __init__(self, playerR, playerY, rows, columns):
@@ -24,6 +20,16 @@ class FourInLine:
         self.last = [0] * 7
         self.playerR, self.playerY = playerR, playerY
         self.winner = ' '
+        self.contraDiagonalInicio = []#desde donde inicia de abajito. column, row
+        self.contraDiagonalFin = []
+        self.diagonalInicio = []
+        self.diagonalFin = []
+        self.inicializarDiagonales(rows, columns)
+        print self.contraDiagonalFin
+        print self.contraDiagonalInicio
+        print self.diagonalInicio 
+        print self.diagonalFin 
+
 
     def play_game(self):
         self.playerR.start_game('R')
@@ -119,6 +125,34 @@ class FourInLine:
                 r -= 1
                 c -= 1
         return False
+
+    def inicializarDiagonales(self, rows, columns):
+        self.contraDiagonalInicio = []#desde donde inicia de abajito. column, row
+        self.contraDiagonalFin = []
+        self.diagonalInicio = []
+        self.diagonalFin = []
+        if columns > 3 and rows > 3:
+            for r in xrange(3, rows):
+                self.contraDiagonalInicio.append((0,r))
+            for c in xrange(1, columns-3):
+                self.contraDiagonalInicio.append((c,rows-1))
+
+            for c in xrange(3, columns):
+                self.contraDiagonalFin.append((c,0))
+            for r in xrange(1, rows-3):
+                self.contraDiagonalFin.append((6,c))
+
+            for c in xrange(3,columns):
+                self.diagonalInicio.append((c,rows-1))
+            for r in xrange(rows-2, 2,-1):
+                self.diagonalInicio.append((columns-1,r))
+
+            for r in xrange(rows-4, -1,-1):#indices, desgracia de todo programador...
+                self.diagonalFin.append((0,r))
+            for c in xrange(1, columns-3):
+                self.diagonalFin.append((c,0))
+
+
 
     def board_full(self):
         for i in self.last:
@@ -289,7 +323,7 @@ for a in [None]:
             
             # Lets play
             results = []
-            for i in xrange(iteraciones):
+            for i in xrange(1):
                 juego = FourInLine(playerR, playerY, 6, 7)
                 juego.play_game()
                 if juego.winner == 'R':
@@ -313,7 +347,7 @@ for a in [None]:
             lasts = [results[x] for x in range(int(iteraciones-iteraciones/10), iteraciones)]
             lasts_rwins = len([x for x in lasts if x == 'R'])
             lasts_r_rate = lasts_rwins/(iteraciones/10)
-            experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")
+            experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")'''
             
             # Weighted sum with linear (exponential) growth
             '''
@@ -324,7 +358,7 @@ for a in [None]:
                     sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
             experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
             experimento.close()
-            '''
+            
             '''
             # Plot
             x = np.arange(0, iteraciones, 1)
