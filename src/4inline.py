@@ -16,30 +16,19 @@ diagonalInicio = [(3,5),(4,5),(5,5),(6,5),(6,4),(6,3)]
 diagonalFin = [(0,2),(0,1),(0,0),(1,0),(2,0),(3,0)]
 
 class FourInLine:
-    def __init__(self, playerR, playerY):
-        self.board = [[' ',' ',' ',' ',' ',' '],
-                      [' ',' ',' ',' ',' ',' '],
-                      [' ',' ',' ',' ',' ',' '],
-                      [' ',' ',' ',' ',' ',' '],
-                      [' ',' ',' ',' ',' ',' '],
-                      [' ',' ',' ',' ',' ',' '],
-                      [' ',' ',' ',' ',' ',' ']]
-        self.reverse_board = [[' ',' ',' ',' ',' ',' '],
-                              [' ',' ',' ',' ',' ',' '],
-                              [' ',' ',' ',' ',' ',' '],
-                              [' ',' ',' ',' ',' ',' '],
-                              [' ',' ',' ',' ',' ',' '],
-                              [' ',' ',' ',' ',' ',' '],
-                              [' ',' ',' ',' ',' ',' ']]
+    def __init__(self, playerR, playerY, rows, columns):
+        self.board = [ [ ' ' for _ in range(rows)] for _ in range(columns)]
+        self.reverse_board = [ [ ' ' for _ in range(rows)] for _ in range(columns)]
+        self.rows = rows
+        self.columns = columns
         self.last = [0] * 7
         self.playerR, self.playerY = playerR, playerY
-        self.playerR_turn = np.random.choice([True, False])
         self.winner = ' '
 
     def play_game(self):
         self.playerR.start_game('R')
         self.playerY.start_game('Y')
-        iter = 0
+        self.playerR_turn = np.random.choice([True, False])
         while True: #yolo
             # Turn selection
             if self.playerR_turn:
@@ -49,11 +38,11 @@ class FourInLine:
             if player.breed == "human":
                 self.display_board()
             # Based on the state, select an action
-            sel_column = player.move(self.last, self.board)-1
+            sel_column = player.move(self.last, self.board, self.available_moves())
             # Check if the selected action is ilegal
-            if self.last[sel_column] >= 6:
+            if self.last[sel_column] >= self.rows:
                 print "Accion ilegal!"
-                player.reward(-99, self.board, self.last, self.reverse_board) # score of shame
+                player.reward(-99, self.board, self.last, self.reverse_board, self.available_moves()) # score of shame
                 break
             # Is not ilegal, so lets update
             self.board[sel_column][self.last[sel_column]] = char
@@ -64,18 +53,18 @@ class FourInLine:
             self.last[sel_column] += 1
             # Check if the actual player wins
             if self.player_wins(char, sel_column):
-                player.reward(20.0, self.board,self.last, self.reverse_board)
-                other_player.reward(-20.0, self.board, self.last, self.reverse_board)
+                player.reward(1, self.board,self.last, self.reverse_board, self.available_moves())
+                other_player.reward(-1, self.board, self.last, self.reverse_board, self.available_moves())
                 self.winner = char
                 break
             # Tie game?
             if self.board_full():
                 #print "Empate"
-                player.reward(4.0, self.board, self.last, self.reverse_board)
-                other_player.reward(4.0, self.board, self.last, self.reverse_board)
+                player.reward(0.5, self.board, self.last, self.reverse_board, self.available_moves())
+                other_player.reward(0.5, self.board, self.last, self.reverse_board, self.available_moves())
                 self.winner = "Tie"
                 break
-            # other_player.reward(0, self.board, self.last, self.reverse_board)
+            other_player.reward(0, self.board, self.last, self.reverse_board, self.available_moves())
             # Swicht of turn
             self.playerR_turn = not self.playerR_turn
 
@@ -88,14 +77,15 @@ class FourInLine:
             return True
         # Check by rows
         counter = 0
-        for col in xrange(7):
+        for col in xrange(self.columns):
             if self.board[col][row] == char:
-              counter += 1
-              if counter == 4:
-                  #print "Gano el jugador", char, "por fila", row+1
-                  return True
+                counter += 1
+                if counter == 4:
+                    #print "Gano el jugador", char, "por fila", row+1
+                    return True
             else:
-              counter = 0
+                counter = 0
+        # Check by diagonals
         counter = 0
         if row + column > 3 and row + column < 8:
             c = contraDiagonalInicio[row + column - 3][0]
@@ -112,7 +102,7 @@ class FourInLine:
                   counter = 0
                 r -= 1
                 c += 1
-        ounter = 0
+        counter = 0
         if row - column > -3 and row - column < 4:
             c = diagonalInicio[row - column + 2][0]
             r = diagonalInicio[row - column + 2][1]
@@ -128,15 +118,20 @@ class FourInLine:
                   counter = 0
                 r -= 1
                 c -= 1
-        # TODO: Check by diagonals
-
         return False
 
     def board_full(self):
-      for i in self.last:
-        if i < 6:
-          return False
-      return True
+        for i in self.last:
+            if i < 6:
+                return False
+        return True
+
+    def available_moves(self):
+        res = []
+        for i in xrange(7):
+            if self.last[i] < 6:
+                res.append(i)
+        return res 
 
     def display_board(self):
         board = [list(i) for i in zip(*self.board)]
@@ -155,19 +150,14 @@ class Player(object):
     def start_game(self, char):
         print "\nNew game!"
 
-    def move(self, last, board):
-        return int(raw_input("Your move? "))
+    def move(self, last, board, moves):
+        input = int(raw_input("Please enter your move: ")) 
+        return input-1
 
-    def reward(self, value, board, lastDiscs, reverse_state):
+    def reward(self, value, board, lastDiscs, reverse_state, moves):
         pass
         #print "{} rewarded: {}".format(self.breed, value)
 
-    def available_moves(self, last):
-        res = []
-        for i in xrange(7):
-          if last[i] < 6:
-            res.append(i+1)
-        return res 
 
 
 class RandomPlayer(Player):
@@ -177,12 +167,12 @@ class RandomPlayer(Player):
     def start_game(self, char):
         pass
 
-    def move(self, last, board):
-        return np.random.choice(self.available_moves(last))
+    def move(self, last, board, moves):
+        return np.random.choice(moves)
 
 
 class QLearningPlayer(Player):
-    def __init__(self, epsilon=0.2, alpha=0.3, gamma=0.9, tau = 0.5):
+    def __init__(self, epsilon=0.2, alpha=0.3, gamma=0.9, tau = 0.25):
         self.breed = "Qlearner"
         self.harm_humans = False
         self.q = {} # (state, action) keys: Q values
@@ -192,13 +182,7 @@ class QLearningPlayer(Player):
         self.tau = tau # temperature
 
     def start_game(self, char):
-        self.last_board = ((' ',' ',' ',' ',' ',' '),
-                          (' ',' ',' ',' ',' ',' '),
-                          (' ',' ',' ',' ',' ',' '),
-                          (' ',' ',' ',' ',' ',' '),
-                          (' ',' ',' ',' ',' ',' '),
-                          (' ',' ',' ',' ',' ',' '),
-                          (' ',' ',' ',' ',' ',' '))
+        self.last_board = None #the last board is generated when the player moves
         self.last_move = None
 
     def getQ(self, state, action):
@@ -211,9 +195,9 @@ class QLearningPlayer(Player):
         return self.q[(state, action)]
             
 
-    def move(self, last, board):
+    def move(self, last, board, moves):
         self.last_board = mutable2inmutable(board)
-        actions = self.available_moves(last)
+        actions = moves
 
         ### Epsilon greedy
         #if random.random() < self.epsilon: # explore!
@@ -237,13 +221,14 @@ class QLearningPlayer(Player):
 
         return action
 
-    def reward(self, value, board, lastDiscs, reverse_state):
+    def reward(self, value, board, lastDiscs, reverse_state, moves):
         if self.last_move:
-            self.learn(self.last_board, lastDiscs, self.last_move, value, board, reverse_state)
+            self.learn(self.last_board, lastDiscs, self.last_move, value, board, reverse_state, moves)
 
-    def learn(self, state, lastDiscs, action, reward, result_state, reverse_state):
+    def learn(self, state, lastDiscs, action, reward, result_state, reverse_state, moves):
         prev = self.getQ(state, action)
-        qs = [self.getQ(reverse_state, a) for a in self.available_moves(state)]
+        reverse_state = mutable2inmutable(reverse_state)
+        qs = [self.getQ(reverse_state, a) for a in moves]
         if len(qs) == 0:
             otherqnew = 0
         else:
@@ -282,40 +267,14 @@ def inmutable2mutable(board):
         aux.append(l_aux)
     return aux
 
-# playerR = QLearningPlayer()
-# playerY = RandomPlayer()
-# rwins = 0.0
-# ywins = 0.0
-# ties = 0.0
-
-# for i in xrange(0,1000000):
-#     print "Epoch: ", i
-#     juego = FourInLine(playerR, playerY)
-#     juego.play_game()
-
-#     if juego.winner == 'R':
-#         rwins += 1
-#     elif juego.winner == 'Y':
-#         ywins += 1
-#     else:
-#         ties += 1
-
-#     print rwins
-#     print ywins
-#     print ties
-
-#     r_rate = rwins / (rwins + ywins + ties)
-#     print "Red's rate of wins: ", r_rate
-#     #juego.display_board()
-
 
 experimento = open('Experimentos', 'w')
 experimento.close()
-iteraciones = 100000
+iteraciones = 250000
 
-for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
-    for a in [0.01, 0.1, 0.3, 1.0]:
-        for t in [0.1 , 0.2, 0.3, 0.4, 0.5]:
+for a in [None]:
+    for g in [None]:
+        for t in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
             print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
             experimento = open('Experimentos', 'a')
             experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
@@ -324,15 +283,14 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
             rwins = 0.0
             ywins = 0.0
             ties  = 0.0
-            playerR = QLearningPlayer(alpha=a, gamma=g, tau=t)
+
+            playerR = QLearningPlayer(tau=t)
             playerY = RandomPlayer()
             
             # Lets play
             results = []
             for i in xrange(iteraciones):
-                if i%1000 == 0: 
-                    print i, "iteraciones" 
-                juego = FourInLine(playerR, playerY)
+                juego = FourInLine(playerR, playerY, 6, 7)
                 juego.play_game()
                 if juego.winner == 'R':
                     rwins += 1
@@ -343,6 +301,8 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
                 else:
                     ties += 1
                     results.append('T')
+                if i%10000 == 0: 
+                    print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
             
             # Original perfomance measurement
             r_rate = rwins/(rwins + ywins + ties)
@@ -356,6 +316,7 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
             experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")
             
             # Weighted sum with linear (exponential) growth
+            '''
             factor = 0.5
             sum_r_rate = 0
             for result_index in range(len(results)):
@@ -363,6 +324,7 @@ for g in [0.1, 0.3, 0.4, 0.6, 0.8, 0.9, 0.95]:
                     sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
             experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
             experimento.close()
+            '''
             '''
             # Plot
             x = np.arange(0, iteraciones, 1)
