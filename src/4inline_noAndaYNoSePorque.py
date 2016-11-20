@@ -5,6 +5,7 @@ import numpy as np
 #from joblib import Parallel, delayed
 import multiprocessing
 import math
+from math import floor
 import matplotlib.pyplot as plt
 
 import hashlib
@@ -25,10 +26,6 @@ class FourInLine:
         self.diagonalInicio = []
         self.diagonalFin = []
         self.inicializarDiagonales(rows, columns)
-        print self.contraDiagonalFin
-        print self.contraDiagonalInicio
-        print self.diagonalInicio 
-        print self.diagonalFin 
 
 
     def play_game(self):
@@ -111,12 +108,12 @@ class FourInLine:
                 r -= 1
                 c += 1
         counter = 0
-
-        if row - column > self.rows - self.columns - 3 and row - column < self.rows - self.columns + 3:
-            c = self.diagonalInicio[row - column + 2][0]
-            r = self.diagonalInicio[row - column + 2][1]
-            ctope = self.diagonalFin[row - column + 2][0]
-            rtope = self.diagonalFin[row - column + 2][1]
+        if row - column > self.rows - self.columns - 2 and row - column < self.rows - self.columns + 2:
+            estabilizadorDeIndice = int(floor(self.rows/2)-1)
+            c = self.diagonalInicio[row - column + estabilizadorDeIndice][0]
+            r = self.diagonalInicio[row - column + estabilizadorDeIndice][1]
+            ctope = self.diagonalFin[row - column + estabilizadorDeIndice][0]
+            rtope = self.diagonalFin[row - column + estabilizadorDeIndice][1]
             while c >= ctope and r >= rtope: #estas dos deberian dejar de cumplirse al mismo tiempo
                 if self.board[c][r] == char:
                   counter += 1
@@ -143,23 +140,23 @@ class FourInLine:
             for c in xrange(3, columns):
                 self.contraDiagonalFin.append((c,0))
             for r in xrange(1, rows-3):
-                self.contraDiagonalFin.append((6,c))
+                self.contraDiagonalFin.append((columns-1,r))
 
             for c in xrange(3,columns):
                 self.diagonalInicio.append((c,rows-1))
             for r in xrange(rows-2, 2,-1):
                 self.diagonalInicio.append((columns-1,r))
 
-            for r in xrange(rows-4, -1,-1):#indices, desgracia de todo programador...
+            for r in xrange(rows-1-3, 0,-1):#indices, desgracia de todo programador...
                 self.diagonalFin.append((0,r))
-            for c in xrange(1, columns-3):
+            for c in xrange(0, columns-3):
                 self.diagonalFin.append((c,0))
 
 
 
     def board_full(self):
         for i in self.last:
-            if i < 6:
+            if i < self.rows:
                 return False
         return True
 
@@ -244,9 +241,7 @@ class QLearningPlayer(Player):
         qs = [self.getQ(self.last_board, a) for a in actions]
         ### Softmax
         softqs = softmax(qs, self.tau)
-        print actions
         action = np.random.choice(actions, p=softqs)
-        print "hola \n"
         # maxQ = max(qs)
         # if qs.count(maxQ) > 1:
         #     # more than 1 best option; choose among them randomly
@@ -328,7 +323,7 @@ for a in [None]:
             # Lets play
             results = []
             for i in xrange(2):
-                juego = FourInLine(playerR, playerY, 5, 6)
+                juego = FourInLine(playerR, playerY, 8, 8)
                 juego.play_game()
                 if juego.winner == 'R':
                     rwins += 1
