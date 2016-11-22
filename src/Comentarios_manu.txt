@@ -1,0 +1,13 @@
+Explicación de los resultados:
+
+* Experimento_rand+q: entrenamos al agente contra random y lo testeamos contra otro qlearner que no había aprendido nada. Conclusión: no mejoró el desempeño del agente contra un tipo que nunca había jugado.
+
+* Experimento_q+rand: entrenamos al agente contra qlearner y lo testeamos contra random. No se aprecia ninguna diferencia significativa respecto de si se lo hubiera entrenado contra random, de hecho más vale empeoró.
+
+Conclusiones de los dos puntos anteriores:
+- Adapatarse a jugar contra cierto tipo de rival no implica poder jugar bien contra cualquiera.
+- En particular, al entrenarse contra random se cae en el problema ese que les comenté anoche, de que el tipo puede estar ponderando bien malas situaciones.
+
+* Experimento_rr (la rr es de round robin): Aleatoriamente el agente juega rondas de cierta cantidad de iteraciones contra random o contra qlearner (que va aprendiendo de las jugadas contra el agente). Objetivo: tratar de evitar el problema en el que se cayó en los dos puntos anteriores, es decir que no se vuelva muy específico. Conclusión: difícil de cuantificar si se logró el objetivo la verdad, los resultados obtenidos para cada oponente son similares a los que se obtienen para cada uno por separado, esto lleva a pensar que realmente son estilos de juegos muy diferentes.
+
+Cosas que quedaron pendientes y hubiera estado bueno hacer: tratar de jugar nosotros contra los agentes entrenados bajo los distintos regimenes de aprendizaje para ver si el entrenamiento sirve al jugar contra personas. Tmbién permitiría ver que tan bien resuelve las situaciones más básicas 
