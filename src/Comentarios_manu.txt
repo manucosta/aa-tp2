@@ -6,7 +6,7 @@ Explicación de los resultados:
 
 Conclusiones de los dos puntos anteriores:
 - Adapatarse a jugar contra cierto tipo de rival no implica poder jugar bien contra cualquiera.
-- En particular, al entrenarse contra random se cae en el problema ese que les comenté anoche, de que el tipo puede estar ponderando bien malas situaciones.
+- En particular, al entrenarse contra random se cae en el problema ese que les comenté anoche, de que el tipo puede estar ponderando bien malas situaciones. Esto potencialmente se arregla si la cantidad de iteraciones tiende a infinito
 
 * Experimento_rr (la rr es de round robin): Aleatoriamente el agente juega rondas de cierta cantidad de iteraciones contra random o contra qlearner (que va aprendiendo de las jugadas contra el agente). Objetivo: tratar de evitar el problema en el que se cayó en los dos puntos anteriores, es decir que no se vuelva muy específico. Conclusión: difícil de cuantificar si se logró el objetivo la verdad, los resultados obtenidos para cada oponente son similares a los que se obtienen para cada uno por separado, esto lleva a pensar que realmente son estilos de juegos muy diferentes.
 
