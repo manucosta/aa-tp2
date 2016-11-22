@@ -1,0 +1,44 @@
+Cada ronda es de 12k iteraciones
+Ronda de entrenamiento 0, rival: 1
+Rate de victorias: 0.66425
+Ronda de entrenamiento 1, rival: 1
+Rate de victorias: 0.736416666667
+Ronda de entrenamiento 2, rival: 1
+Rate de victorias: 0.751583333333
+Ronda de entrenamiento 3, rival: 1
+Rate de victorias: 0.748583333333
+Ronda de entrenamiento 4, rival: 2
+Rate de victorias: 0.498583333333
+Ronda de entrenamiento 5, rival: 2
+Rate de victorias: 0.495583333333
+Ronda de entrenamiento 6, rival: 2
+Rate de victorias: 0.502416666667
+Ronda de entrenamiento 7, rival: 1
+Rate de victorias: 0.751416666667
+Ronda de entrenamiento 8, rival: 2
+Rate de victorias: 0.510583333333
+Ronda de entrenamiento 9, rival: 1
+Rate de victorias: 0.754833333333
+Ronda de entrenamiento 10, rival: 2
+Rate de victorias: 0.498666666667
+Ronda de entrenamiento 11, rival: 2
+Rate de victorias: 0.492333333333
+Ronda de entrenamiento 12, rival: 2
+Rate de victorias: 0.49375
+Ronda de entrenamiento 13, rival: 2
+Rate de victorias: 0.496333333333
+Ronda de entrenamiento 14, rival: 2
+Rate de victorias: 0.483833333333
+Ronda de entrenamiento 15, rival: 1
+Rate de victorias: 0.761166666667
+Ronda de entrenamiento 16, rival: 2
+Rate de victorias: 0.502
+Ronda de entrenamiento 17, rival: 1
+Rate de victorias: 0.761083333333
+Ronda de entrenamiento 18, rival: 2
+Rate de victorias: 0.493833333333
+Ronda de entrenamiento 19, rival: 1
+Rate de victorias: 0.768916666667
+RONDA DE TEST!!! (contra random)
+Rate final Qlearner: 0.753583333333
+Rate final random: 0.244666666667
