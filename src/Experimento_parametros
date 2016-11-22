@@ -1,0 +1,96 @@
+Alpha: 0.1 Tau: 0.05 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.75215
+Alpha: 0.1 Tau: 0.1 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.7457
+Alpha: 0.1 Tau: 0.5 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.59145
+Alpha: 0.1 Tau: 1.0 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.4777
+Alpha: 0.1 Tau: 0.05 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.753
+Alpha: 0.1 Tau: 0.1 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.7508
+Alpha: 0.1 Tau: 0.5 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.59645
+Alpha: 0.1 Tau: 1.0 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.4766
+Alpha: 0.1 Tau: 0.05 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.75505
+Alpha: 0.1 Tau: 0.1 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.75145
+Alpha: 0.1 Tau: 0.5 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.60205
+Alpha: 0.1 Tau: 1.0 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.4762
+Alpha: 0.1 Tau: 0.05 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.75465
+Alpha: 0.1 Tau: 0.1 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.7558
+Alpha: 0.1 Tau: 0.5 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.616
+Alpha: 0.1 Tau: 1.0 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.48395
+Alpha: 0.3 Tau: 0.05 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.75845
+Alpha: 0.3 Tau: 0.1 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.754
+Alpha: 0.3 Tau: 0.5 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.62205
+Alpha: 0.3 Tau: 1.0 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.48255
+Alpha: 0.3 Tau: 0.05 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.7624
+Alpha: 0.3 Tau: 0.1 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.7585
+Alpha: 0.3 Tau: 0.5 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.6252
+Alpha: 0.3 Tau: 1.0 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.4879
+Alpha: 0.3 Tau: 0.05 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.7542
+Alpha: 0.3 Tau: 0.1 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.75265
+Alpha: 0.3 Tau: 0.5 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.6345
+Alpha: 0.3 Tau: 1.0 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.48795
+Alpha: 0.3 Tau: 0.05 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.76075
+Alpha: 0.3 Tau: 0.1 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.75155
+Alpha: 0.3 Tau: 0.5 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.6467
+Alpha: 0.3 Tau: 1.0 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.48545
+Alpha: 1.0 Tau: 0.05 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.7654
+Alpha: 1.0 Tau: 0.1 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.7605
+Alpha: 1.0 Tau: 0.5 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.65655
+Alpha: 1.0 Tau: 1.0 Gamma: 0.8
+ Red's rate of wins taking into account only the last 10% matches: 0.4898
+Alpha: 1.0 Tau: 0.05 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.7674
+Alpha: 1.0 Tau: 0.1 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.7699
+Alpha: 1.0 Tau: 0.5 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.67115
+Alpha: 1.0 Tau: 1.0 Gamma: 0.85
+ Red's rate of wins taking into account only the last 10% matches: 0.49715
+Alpha: 1.0 Tau: 0.05 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.7667
+Alpha: 1.0 Tau: 0.1 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.7617
+Alpha: 1.0 Tau: 0.5 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.67615
+Alpha: 1.0 Tau: 1.0 Gamma: 0.9
+ Red's rate of wins taking into account only the last 10% matches: 0.4989
+Alpha: 1.0 Tau: 0.05 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.76345
+Alpha: 1.0 Tau: 0.1 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.7658
+Alpha: 1.0 Tau: 0.5 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.68065
+Alpha: 1.0 Tau: 1.0 Gamma: 0.95
+ Red's rate of wins taking into account only the last 10% matches: 0.50875

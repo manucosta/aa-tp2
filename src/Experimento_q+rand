@@ -1,0 +1,12 @@
+60k iteraciones vs qlearner + 15k vs random
+Ronda de entrenamiento 0, rival: 2
+Rate de victorias: 0.4986
+Ronda de entrenamiento 1, rival: 2
+Rate de victorias: 0.4906
+Ronda de entrenamiento 2, rival: 2
+Rate de victorias: 0.492466666667
+Ronda de entrenamiento 3, rival: 2
+Rate de victorias: 0.491266666667
+RONDA DE TEST!!! 
+Rate final Qlearner: 0.680266666667
+Rate final random: 0.316733333333
