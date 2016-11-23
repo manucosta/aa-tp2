@@ -270,11 +270,11 @@ def inmutable2mutable(board):
 
 experimento = open('Experimentos', 'w')
 experimento.close()
-iteraciones = 100000
+iteraciones = 10000
 
-for a in [None]:
-    for g in [None]:
-        for t in [0.05]:
+for a in [1.0]:
+    for g in [0.85]:
+        for t in [0.01]:
                 print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
                 experimento = open('Experimentos', 'a')
                 experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
@@ -288,8 +288,9 @@ for a in [None]:
                 y_rates = []
                 
                 playerR = QLearningPlayer(tau=t)
-                playerY = RandomPlayer()
+                playerY = QLearningPlayer(tau=t)
                 
+                playerFresco = QLearningPlayer(tau=t)
                 # Lets play
                 results = []
                 for i in xrange(iteraciones):
@@ -304,7 +305,31 @@ for a in [None]:
                     else:
                         ties += 1
                         results.append('T')
-                    if i%10000 == 0: 
+                    if i%100 == 0: 
+                        print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
+       
+                rwins = 0.0
+                ywins = 0.0
+                ties  = 0.0
+                
+                r_rates = []
+                y_rates = []
+
+                results = []
+                
+                for i in xrange(iteraciones):
+                    juego = FourInLine(playerR, playerFresco, 6, 7)
+                    juego.play_game()
+                    if juego.winner == 'R':
+                        rwins += 1
+                        results.append('R')
+                    elif juego.winner == 'Y':
+                        ywins += 1
+                        results.append('Y')
+                    else:
+                        ties += 1
+                        results.append('T')
+                    if i%100 == 0: 
                         print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
                     r_rates.append((rwins/(rwins + ywins + ties)))
                     y_rates.append((ywins/(rwins + ywins + ties)))
