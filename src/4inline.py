@@ -247,10 +247,12 @@ class QLearningPlayer(Player):
 
 def softmax(qs, tau):
     distr = []
-    expos = [np.exp(q/tau) for q in qs]
-    suma = sum(expos)
-    for e in expos:
-        distr.append(e / suma)
+    a = max(qs)
+    expos = [np.exp(q/tau - a/tau) for q in qs]
+    log_sum = np.log(sum(expos)) + a/tau
+    for q in qs:
+        log_sm = q/tau - log_sum
+        distr.append(np.exp(log_sm))
     return distr
         
 def mutable2inmutable(board):
