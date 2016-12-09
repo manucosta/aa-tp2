@@ -18,12 +18,12 @@ diagonalFin = [(0,2),(0,1),(0,0),(1,0),(2,0),(3,0)]
 class FourInLine:
     def __init__(self, playerR, playerY, rows, columns):
         self.board = [ [ ' ' for _ in range(rows)] for _ in range(columns)]
-        self.reverse_board = [ [ ' ' for _ in range(rows)] for _ in range(columns)]
         self.rows = rows
         self.columns = columns
         self.last = [0] * columns
         self.playerR, self.playerY = playerR, playerY
         self.winner = ' '
+        self.end = False
 
     def play_game(self):
         self.playerR.start_game('R')
@@ -42,29 +42,27 @@ class FourInLine:
             # Check if the selected action is ilegal
             if self.last[sel_column] >= self.rows:
                 print "Accion ilegal!"
-                player.reward(-99, self.board, self.last, self.reverse_board, self.available_moves()) # score of shame
+                player.reward(-99, self.board, self.last, self.available_moves()) # score of shame
                 break
             # Is not ilegal, so lets update
             self.board[sel_column][self.last[sel_column]] = char
-            if char == 'R':
-                self.reverse_board[sel_column][self.last[sel_column]] = 'Y'
-            else:
-                self.reverse_board[sel_column][self.last[sel_column]] = 'R'
             self.last[sel_column] += 1
             # Check if the actual player wins
             if self.player_wins(char, sel_column):
-                player.reward(1, self.board,self.last, self.reverse_board, self.available_moves())
-                other_player.reward(-1, self.board, self.last, self.reverse_board, self.available_moves())
+                self.end = True
+                player.reward(10.0, self.board,self.last, self.available_moves())
+                other_player.reward(-10.0, self.board, self.last, self.available_moves())
                 self.winner = char
                 break
             # Tie game?
             if self.board_full():
                 #print "Empate"
-                player.reward(0.5, self.board, self.last, self.reverse_board, self.available_moves())
-                other_player.reward(0.5, self.board, self.last, self.reverse_board, self.available_moves())
+                self.end = True
+                player.reward(0.5, self.board, self.last, self.available_moves())
+                other_player.reward(0.5, self.board, self.last, self.available_moves())
                 self.winner = "Tie"
                 break
-            other_player.reward(0, self.board, self.last, self.reverse_board, self.available_moves())
+            other_player.reward(0.0, self.board, self.last, self.available_moves())
             # Swicht of turn
             self.playerR_turn = not self.playerR_turn
 
@@ -128,6 +126,8 @@ class FourInLine:
 
     def available_moves(self):
         res = []
+        if self.end:
+            return res
         for i in xrange(self.columns):
             if self.last[i] < self.rows:
                 res.append(i)
@@ -154,7 +154,7 @@ class Player(object):
         input = int(raw_input("Please enter your move: ")) 
         return input-1
 
-    def reward(self, value, board, lastDiscs, reverse_state, moves):
+    def reward(self, value, board, lastDiscs, moves):
         pass
         #print "{} rewarded: {}".format(self.breed, value)
 
@@ -180,21 +180,26 @@ class QLearningPlayer(Player):
         self.alpha = alpha # learning rate
         self.gamma = gamma # discount factor for future rewards
         self.tau = tau # temperature
+        self.iter = 0 # amount of matches played
 
     def start_game(self, char):
         self.last_board = None #the last board is generated when the player moves
         self.last_move = None
+        if self.iter != 0 and self.iter % 15000 == 0:
+            self.tau /= 1.6
+        if self.tau < 0.001:
+            self.tau = 0.001
+        self.iter += 1
 
     def getQ(self, state, action):
         # encourage exploration; "optimistic" 1.0 initial values
         # TODO: Probar "pesimista": 0.0 initial values.
 
         if not self.q.has_key((state, action)):
-            self.q[(state, action)] = 1.0
+            self.q[(state, action)] = 0.0
         
         return self.q[(state, action)]
             
-
     def move(self, last, board, moves):
         self.last_board = mutable2inmutable(board)
         actions = moves
@@ -221,29 +226,20 @@ class QLearningPlayer(Player):
 
         return action
 
-    def reward(self, value, board, lastDiscs, reverse_state, moves):
+    def reward(self, value, board, lastDiscs, moves):
         if self.last_move:
-            self.learn(self.last_board, lastDiscs, self.last_move, value, board, reverse_state, moves)
+            self.learn(self.last_board, lastDiscs, self.last_move, value, board, moves)
 
-    def learn(self, state, lastDiscs, action, reward, result_state, reverse_state, moves):
+    def learn(self, state, lastDiscs, action, reward, result_state, moves):
         prev = self.getQ(state, action)
-        reverse_state = mutable2inmutable(reverse_state)
-        qs = [self.getQ(reverse_state, a) for a in moves]
+        result_state = mutable2inmutable(result_state)
+        qs = [self.getQ(result_state, a) for a in moves]
         if len(qs) == 0:
+        # Game over
             otherqnew = 0
         else:
-            softqs = softmax(qs, self.tau)
-            otherqnew = np.random.choice(qs, p=softqs)            
-        # other_player_actions = [a for a in self.available_moves(lastDiscs)]
-        # if len(other_player_actions) == 0:
-        #     randqnew = 0.0
-        # else:
-        #     other_action = np.random.choice(other_player_actions)
-        #     result_state[other_action-1][lastDiscs[other_action-1]] = 'Y'
-        #     result_state = mutable2inmutable(result_state)
-        #     randqnew = self.getQ(result_state, other_action)
-        # self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*randqnew) - prev)
-        self.q[(state, action)] = prev + self.alpha * ((reward - self.gamma*otherqnew) - prev) 
+            otherqnew = max(qs)
+        self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*otherqnew) - prev)
 
 def softmax(qs, tau):
     distr = []
@@ -269,14 +265,13 @@ def inmutable2mutable(board):
         aux.append(l_aux)
     return aux
 
-
 experimento = open('Experimentos', 'w')
 experimento.close()
-iteraciones = 10000
+iteraciones = 250000
 
-for a in [1.0]:
-    for g in [0.85]:
-        for t in [0.01]:
+for a in [0.3]:
+    for g in [0.9]:
+        for t in [5.0]:
                 print "Experimentando con " + "Alpha: " + str(a) + " Tau: " + str(t) + " Gamma: " + str(g)
                 experimento = open('Experimentos', 'a')
                 experimento.write("Alpha: " + str(a) + " Tau: " + str(t )+ " Gamma: " + str(g) + "\n")
@@ -289,10 +284,9 @@ for a in [1.0]:
                 r_rates = []
                 y_rates = []
                 
-                playerR = QLearningPlayer(tau=t)
-                playerY = QLearningPlayer(tau=t)
-                
-                playerFresco = QLearningPlayer(tau=t)
+                playerR = QLearningPlayer(alpha=a, gamma=g, tau=t)
+                playerY = RandomPlayer()
+
                 # Lets play
                 results = []
                 for i in xrange(iteraciones):
@@ -307,35 +301,9 @@ for a in [1.0]:
                     else:
                         ties += 1
                         results.append('T')
-                    if i%100 == 0: 
-                        print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
+                    if i%10000 == 0: 
+                        print i, "iteraciones, ", "tau: ", playerR.tau," Rate = ", rwins/(rwins + ywins + ties) 
        
-                rwins = 0.0
-                ywins = 0.0
-                ties  = 0.0
-                
-                r_rates = []
-                y_rates = []
-
-                results = []
-                
-                for i in xrange(iteraciones):
-                    juego = FourInLine(playerR, playerFresco, 6, 7)
-                    juego.play_game()
-                    if juego.winner == 'R':
-                        rwins += 1
-                        results.append('R')
-                    elif juego.winner == 'Y':
-                        ywins += 1
-                        results.append('Y')
-                    else:
-                        ties += 1
-                        results.append('T')
-                    if i%100 == 0: 
-                        print i, "iteraciones, Rate = ", rwins/(rwins + ywins + ties) 
-                    r_rates.append((rwins/(rwins + ywins + ties)))
-                    y_rates.append((ywins/(rwins + ywins + ties)))
-        
                 # Original perfomance measurement
                 r_rate = rwins/(rwins + ywins + ties)
                 experimento = open('Experimentos', 'a')
@@ -346,35 +314,25 @@ for a in [1.0]:
                 lasts_rwins = len([x for x in lasts if x == 'R'])
                 lasts_r_rate = lasts_rwins/(iteraciones/10)
                 experimento.write(" Red's rate of wins taking into account only the last 10% matches: " + str(lasts_r_rate) + "\n")
-                
-                # Weighted sum with linear (exponential) growth
-                '''
-                factor = 0.5
-                sum_r_rate = 0
-                for result_index in range(len(results)):
-                    if results[result_index] == 'R':
-                        sum_r_rate += result_index # Habria que ver alguna manera de normalizar, da numeros muy grandes y se pierde nocion.
-                experimento.write(" Red's rate of wins with a weighted sum with UNDEFINED growth: " + str(sum_r_rate) + "\n")
                 experimento.close()
                 
-                '''
-                
                 # Plot
-                x = np.arange(0, iteraciones, 1)
-                plt.plot(x, r_rates, color = 'r', label='Player R')
-                plt.plot(x, y_rates, color = 'b', label='Player Y')
+                # x = np.arange(0, iteraciones, 1)
+                # plt.plot(x, r_rates, color = 'r', label='Player R')
+                # plt.plot(x, y_rates, color = 'b', label='Player Y')
                 
-                axes = plt.gca()
-                axes.set_xlim([0, iteraciones])    # x-axis bounds
-                axes.set_ylim([0, 1])              # y-axis bounds
+                # axes = plt.gca()
+                # axes.set_xlim([0, iteraciones])    # x-axis bounds
+                # axes.set_ylim([0, 1])              # y-axis bounds
                     
-                plt.title('Rates')
-                plt.xlabel('Match number')
-                plt.ylabel('Rate of wins')
-                legend = plt.legend(loc='upper right', shadow=True, fontsize='small')
+                # plt.title('Rates')
+                # plt.xlabel('Match number')
+                # plt.ylabel('Rate of wins')
+                # legend = plt.legend(loc='upper right', shadow=True, fontsize='small')
                     
-                plt.grid()
-                plt.show()
+                # plt.grid()
+                # plt.show()
+                #plt.savefig('grafico.pdf')
 
 
 # Con 100.000 iteraciones y escogiendo acciones aleatoriamente:
