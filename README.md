@@ -1,2 +1,2 @@
-# Experimentos
-https://docs.google.com/document/d/18PwOFZ86_DtEKXwFbTQNWWcgpnmTkjrt8AvVKAcMcGY/edit
+# Trabajo Práctico 2 - Aprendizaje por Refuerzos
+http://www.dc.uba.ar/materias/aa/2016/cuat2/tp2
