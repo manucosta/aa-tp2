@@ -15,7 +15,7 @@ contraDiagonalFin = [(3,0),(4,0),(5,0),(6,0),(6,1),(6,2)]
 diagonalInicio = [(3,5),(4,5),(5,5),(6,5),(6,4),(6,3)]
 diagonalFin = [(0,2),(0,1),(0,0),(1,0),(2,0),(3,0)]
 
-class FourInLine:
+class ConnectFour:
     def __init__(self, playerR, playerY, rows, columns):
         self.board = [ [ ' ' for _ in range(rows)] for _ in range(columns)]
         self.rows = rows
@@ -267,8 +267,10 @@ def inmutable2mutable(board):
 
 experimento = open('Experimentos', 'w')
 experimento.close()
+
 iteraciones = 250000
 
+# Grid-search: agregar los parámetros sobre los que se quiere iterar
 for a in [0.3]:
     for g in [0.9]:
         for t in [5.0]:
@@ -290,7 +292,7 @@ for a in [0.3]:
                 # Lets play
                 results = []
                 for i in xrange(iteraciones):
-                    juego = FourInLine(playerR, playerY, 6, 7)
+                    juego = ConnectFour(playerR, playerY, 6, 7)
                     juego.play_game()
                     if juego.winner == 'R':
                         rwins += 1
